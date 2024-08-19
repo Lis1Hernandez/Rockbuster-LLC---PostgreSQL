@@ -1,0 +1,66 @@
+# SQL query to find the top 10 countries for Rockbuster in terms of customer numbers.
+SELECT co.country,
+COUNT(customer_id) AS number_of_customers
+FROM customer AS cu
+INNER JOIN address AS ad ON cu.address_id = ad.address_id
+INNER JOIN city AS ci ON ad.city_id = ci.city_id
+INNER JOIN country AS co ON ci.country_id = co.country_id
+GROUP BY country
+ORDER BY number_of_customers DESC
+LIMIT 10;
+
+# SQL query to identify the top 10 cities that fall within the top 10 countries I identified above.
+SELECT co.country,
+COUNT(customer_id) AS number_of_customers
+FROM customer AS cu
+INNER JOIN address AS ad ON cu.address_id = ad.address_id
+INNER JOIN city AS ci ON ad.city_id = ci.city_id
+INNER JOIN country AS co ON ci.country_id = co.country_id
+GROUP BY country
+ORDER BY number_of_customers DESC
+LIMIT 10;
+SELECT ci.city, co.country,
+COUNT(customer_id) AS number_of_customers
+FROM customer AS cu
+INNER JOIN address AS ad ON cu.address_id = ad.address_id
+INNER JOIN city AS ci ON ad.city_id = ci.city_id
+INNER JOIN country AS co ON ci.country_id = co.country_id
+GROUP BY ci.city, co.country
+ORDER BY number_of_customers DESC
+LIMIT 10;
+
+# SQL query to find the top 5 customers from the top 10 cities above who’ve paid the highest total amounts to Rockbuster
+SELECT cu.customer_id,
+cu.first_name,
+cu.last_name,
+co.country,
+ci.city,
+SUM(pay.amount) AS total_amount_paid
+FROM payment AS pay
+INNER JOIN customer AS cu ON pay.customer_id = cu.customer_id
+INNER JOIN address AS ad ON cu.address_id = ad.address_id
+INNER JOIN city AS ci ON ad.city_id = ci.city_id
+INNER JOIN country AS co ON ci.country_id = co.country_id
+WHERE co.country IN(
+SELECT
+co.country
+FROM customer AS cu
+INNER JOIN address AS ad ON cu.address_id = ad.address_id
+INNER JOIN city AS ci ON ad.city_id = ci.city_id
+INNER JOIN country AS co ON ci.country_id = co.country_id
+GROUP BY co.country
+ORDER BY COUNT(cu.customer_id) DESC
+LIMIT 10 )
+AND ci.city IN(
+SELECT
+ci.city
+FROM customer AS cu
+INNER JOIN address AS ad ON cu.address_id = ad.address_id
+INNER JOIN city AS ci ON ad.city_id = ci.city_id
+INNER JOIN country AS co ON ci.country_id = co.country_id
+GROUP BY ci.city
+ORDER BY COUNT(cu.customer_id) DESC
+LIMIT 10 )
+GROUP BY cu.customer_id, cu.first_name, cu.last_name, co.country, ci.city
+ORDER BY total_amount_paid
+DESC LIMIT 5;
